@@ -8,7 +8,7 @@
         body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f4f4f9; }
         .container { max-width: 500px; width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         input { margin: 20px 0; }
-        #output { 
+        #output, #outputCsv { 
             font-family: monospace; 
             background: #222; 
             color: #0f0; 
@@ -17,6 +17,7 @@
             white-space: pre-wrap; 
             word-break: break-all;
             line-height: 1.2;
+            margin-bottom: 20px;
         }
         canvas { display: none; }
         .preview-box { margin-top: 10px; border: 1px solid #ddd; display: inline-block; }
@@ -37,6 +38,7 @@
 
     <h3>Output:</h3>
     <div id="output">Upload an image to see results...</div>
+    <div id="outputCsv">Csv will be here</div>
 </div>
 
 <canvas id="canvas" width="10" height="10"></canvas>
@@ -46,6 +48,7 @@
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
     const output = document.getElementById('output');
+    const outputCsv = document.getElementById('outputCsv');
     const preview = document.getElementById('preview');
 
     upload.addEventListener('change', (e) => {
@@ -67,6 +70,10 @@
                 // Analyze pixels
                 const imageData = ctx.getImageData(0, 0, 10, 10).data;
                 let binaryString = "";
+                let binaryArray = []
+
+                let binaryTable = Array(10)
+                let binaryRow = []
 
                 for (let i = 0; i < imageData.length; i += 4) {
                     const r = imageData[i];
@@ -78,13 +85,20 @@
                     
                     // 200 is the middle of 0-255. 
                     // Below 200 is "dark" (1), above is "light" (0)
-                    binaryString += brightness < 200 ? "1" : "0";
+                    const binValue = brightness < 200 ? "1" : "0";
+                    binaryArray.push(binValue)
+                    binaryRow.push(binValue)
 
-                    // Optional: Add a newline every 10 characters for a grid look
-                    if ((i / 4 + 1) % 10 === 0) binaryString += "\n";
+                    if ((i / 4 + 1) % 10 === 0) {
+                        let rowIndex = ((i / 4 )/ 10) | 0
+                        binaryTable[rowIndex] = binaryRow.join(" ")
+                        binaryRow = []
+                    }
                 }
 
-                output.textContent = binaryString;
+                console.log(binaryTable)
+                output.textContent = binaryTable.join("\n");
+                outputCsv.textContent = binaryArray.join(", ");
             };
             img.src = event.target.result;
         };
