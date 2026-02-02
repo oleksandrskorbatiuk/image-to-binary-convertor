@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image to Binary Grid</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; background: #f4f4f9; }
+        .container { max-width: 500px; width: 100%; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        input { margin: 20px 0; }
+        #output { 
+            font-family: monospace; 
+            background: #222; 
+            color: #0f0; 
+            padding: 15px; 
+            border-radius: 4px; 
+            white-space: pre-wrap; 
+            word-break: break-all;
+            line-height: 1.2;
+        }
+        canvas { display: none; }
+        .preview-box { margin-top: 10px; border: 1px solid #ddd; display: inline-block; }
+        img { max-width: 100px; display: block; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>10x10 Binary Converter</h2>
+    <p>Upload an image to turn it into a 10x10 grid of 0s and 1s.</p>
+    
+    <input type="file" id="upload" accept="image/*">
+    
+    <div class="preview-box">
+        <img id="preview" src="#" alt="Preview" style="display:none;">
+    </div>
+
+    <h3>Output:</h3>
+    <div id="output">Upload an image to see results...</div>
+</div>
+
+<canvas id="canvas" width="10" height="10"></canvas>
+
+<script>
+    const upload = document.getElementById('upload');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const output = document.getElementById('output');
+    const preview = document.getElementById('preview');
+
+    upload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.onload = () => {
+                // Show preview
+                preview.src = event.target.result;
+                preview.style.display = 'block';
+
+                // Draw image to 10x10 canvas (browser handles downscaling)
+                ctx.clearRect(0, 0, 10, 10);
+                ctx.drawImage(img, 0, 0, 10, 10);
+
+                // Analyze pixels
+                const imageData = ctx.getImageData(0, 0, 10, 10).data;
+                let binaryString = "";
+
+                for (let i = 0; i < imageData.length; i += 4) {
+                    const r = imageData[i];
+                    const g = imageData[i + 1];
+                    const b = imageData[i + 2];
+                    
+                    // Simple grayscale conversion (Brightness)
+                    const brightness = (r + g + b) / 3;
+                    
+                    // 200 is the middle of 0-255. 
+                    // Below 200 is "dark" (1), above is "light" (0)
+                    binaryString += brightness < 200 ? "1" : "0";
+
+                    // Optional: Add a newline every 10 characters for a grid look
+                    if ((i / 4 + 1) % 10 === 0) binaryString += "\n";
+                }
+
+                output.textContent = binaryString;
+            };
+            img.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+</script>
+
+</body>
+</html>
